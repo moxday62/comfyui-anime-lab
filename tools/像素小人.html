@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>像素小人 · 滑条版</title>
+<style>
+  :root {
+    --bg: #14161a; --panel: #1c1f26; --line: #2b303b;
+    --fg: #e6e9ef; --dim: #8a93a5; --acc: #6aa9ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 14px/1.6 "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
+    display: flex; height: 100vh; overflow: hidden;
+  }
+  aside {
+    width: 300px; flex: 0 0 300px; background: var(--panel);
+    border-right: 1px solid var(--line); padding: 18px; overflow-y: auto;
+  }
+  h1 { font-size: 15px; margin: 0 0 4px; letter-spacing: .5px; }
+  .hint { color: var(--dim); font-size: 12px; margin-bottom: 18px; }
+  .row { margin-bottom: 16px; }
+  .row label { display: flex; justify-content: space-between; font-size: 13px; color: var(--dim); margin-bottom: 6px; }
+  .row label b { color: var(--fg); font-weight: 600; }
+  input[type=range] { width: 100%; accent-color: var(--acc); }
+  .chk { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--dim); cursor: pointer; }
+  button {
+    width: 100%; padding: 9px; margin-top: 6px; border: 1px solid var(--line);
+    background: #232833; color: var(--fg); border-radius: 6px; cursor: pointer; font-size: 13px;
+  }
+  button:hover { background: #2b323f; }
+  button.primary { background: var(--acc); border-color: var(--acc); color: #08111f; font-weight: 600; }
+  button.primary:hover { filter: brightness(1.1); }
+  main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; position: relative; }
+  #drop {
+    position: absolute; inset: 16px; border: 2px dashed var(--line); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    color: var(--dim); font-size: 14px; pointer-events: none;
+  }
+  #drop.on { border-color: var(--acc); color: var(--acc); }
+  #wrap { max-width: 100%; max-height: 100%; display: none; }
+  canvas {
+    max-width: 100%; max-height: 84vh; image-rendering: pixelated;
+    background:
+      repeating-conic-gradient(#22262e 0% 25%, #1a1d23 0% 50%) 50% / 16px 16px;
+    box-shadow: 0 8px 40px rgba(0,0,0,.5); border-radius: 4px;
+  }
+  #info { position: absolute; left: 24px; bottom: 12px; color: var(--dim); font-size: 12px; }
+</style>
+</head>
+<body>
+<aside>
+  <h1>像素小人</h1>
+  <div class="hint">拖图进来，或用 Ctrl+V 粘一张。滑条随便拉，实时看效果。</div>
+
+  <div class="row">
+    <label>像素块大小 <b id="v-scale">6</b></label>
+    <input type="range" id="scale" min="1" max="40" value="6">
+  </div>
+
+  <div class="row">
+    <label>颜色数（0 = 不减少） <b id="v-colors">16</b></label>
+    <input type="range" id="colors" min="0" max="64" value="16">
+  </div>
+
+  <div class="row">
+    <label>抖动（色阶过渡更自然） </label>
+    <label class="chk"><input type="checkbox" id="dither" checked> Floyd–Steinberg</label>
+  </div>
+
+  <div class="row">
+    <label>亮度 <b id="v-bright">0</b></label>
+    <input type="range" id="bright" min="-60" max="60" value="0">
+  </div>
+
+  <div class="row">
+    <label>对比度 <b id="v-contrast">0</b></label>
+    <input type="range" id="contrast" min="-50" max="80" value="0">
+  </div>
+
+  <div class="row">
+    <label>饱和度 <b id="v-sat">0</b></label>
+    <input type="range" id="sat" min="-100" max="60" value="0">
+  </div>
+
+  <div class="row">
+    <label>预览放大 <b id="v-zoom">4</b>×</label>
+    <input type="range" id="zoom" min="1" max="12" value="4">
+  </div>
+
+  <button id="pick">选一张图</button>
+  <button id="save" class="primary">导出 PNG</button>
+  <button id="reset">恢复默认</button>
+  <input type="file" id="file" accept="image/*" style="display:none">
+</aside>
+
+<main>
+  <div id="drop">把图拖到这里</div>
+  <div id="wrap"><canvas id="cv"></canvas></div>
+  <div id="info"></div>
+</main>
+
+<script>
+(function () {
+  var el = function (id) { return document.getElementById(id); };
+  var srcImg = null;      // 原图
+  var small = null;       // 像素网格画布（导出用这个）
+
+  // ---------- 调色板：median cut ----------
+  // 把颜色空间切成 N 个盒子，每盒取平均，得到最贴合这张图的 N 色。
+  // 比"固定 16 色"好，因为像素化的关键就是颜色要少而准。
+  function medianCut(data, n) {
+    var px = [];
+    for (var i = 0; i < data.length; i += 4) {
+      if (data[i + 3] < 8) continue;
+      px.push([data[i], data[i + 1], data[i + 2]]);
+    }
+    if (!px.length) return [[0, 0, 0]];
+
+    var boxes = [px];
+    while (boxes.length < n) {
+      // 找"最长边"最长的盒子来切
+      var bi = -1, bestRange = -1, bestCh = 0;
+      for (var b = 0; b < boxes.length; b++) {
+        var box = boxes[b];
+        if (box.length < 2) continue;
+        for (var ch = 0; ch < 3; ch++) {
+          var mn = 255, mx = 0;
+          for (var k = 0; k < box.length; k++) {
+            var v = box[k][ch];
+            if (v < mn) mn = v;
+            if (v > mx) mx = v;
+          }
+          if (mx - mn > bestRange) { bestRange = mx - mn; bi = b; bestCh = ch; }
+        }
+      }
+      if (bi < 0 || bestRange <= 0) break;
+
+      var target = boxes[bi];
+      target.sort(function (a, c) { return a[bestCh] - c[bestCh]; });
+      var half = target.length >> 1;
+      boxes.splice(bi, 1, target.slice(0, half), target.slice(half));
+    }
+
+    return boxes.map(function (box) {
+      var r = 0, g = 0, bl = 0;
+      for (var k = 0; k < box.length; k++) { r += box[k][0]; g += box[k][1]; bl += box[k][2]; }
+      var m = box.length || 1;
+      return [Math.round(r / m), Math.round(g / m), Math.round(bl / m)];
+    });
+  }
+
+  function nearest(pal, r, g, b) {
+    var bi = 0, bd = Infinity;
+    for (var i = 0; i < pal.length; i++) {
+      var dr = r - pal[i][0], dg = g - pal[i][1], db = b - pal[i][2];
+      // 人眼对绿更敏感，加权距离比欧氏距离更接近观感
+      var d = dr * dr * 0.30 + dg * dg * 0.59 + db * db * 0.11;
+      if (d < bd) { bd = d; bi = i; }
+    }
+    return pal[bi];
+  }
+
+  // ---------- 主流程 ----------
+  function render() {
+    if (!srcImg) return;
+
+    var scale = +el('scale').value;
+    var nCol = +el('colors').value;
+    var dither = el('dither').checked;
+    var bright = +el('bright').value;
+    var contrast = +el('contrast').value;
+    var sat = +el('sat').value;
+    var zoom = +el('zoom').value;
+
+    el('v-scale').textContent = scale;
+    el('v-colors').textContent = nCol;
+    el('v-bright').textContent = bright;
+    el('v-contrast').textContent = contrast;
+    el('v-sat').textContent = sat;
+    el('v-zoom').textContent = zoom;
+
+    // 目标像素网格：原图尺寸 ÷ 块大小。至少留 8px，太小的网格画不出人。
+    var w = Math.max(8, Math.round(srcImg.width / scale));
+    var h = Math.max(8, Math.round(srcImg.height * w / srcImg.width));
+
+    var c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    var g = c.getContext('2d');
+    // 缩小用高质量插值（面积平均），比 nearest 少一点锯齿；放大才用 nearest
+    g.imageSmoothingEnabled = true;
+    g.imageSmoothingQuality = 'high';
+    g.drawImage(srcImg, 0, 0, w, h);
+
+    var img = g.getImageData(0, 0, w, h);
+    var d = img.data;
+
+    // 亮度 / 对比度 / 饱和度
+    var cf = (259 * (contrast + 255)) / (255 * (259 - contrast));
+    for (var i = 0; i < d.length; i += 4) {
+      var r = d[i], gg = d[i + 1], b = d[i + 2];
+
+      if (sat !== 0) {
+        var lum = 0.299 * r + 0.587 * gg + 0.114 * b;
+        var s = 1 + sat / 100;
+        r = lum + (r - lum) * s;
+        gg = lum + (gg - lum) * s;
+        b = lum + (b - lum) * s;
+      }
+      if (bright !== 0) { r += bright; gg += bright; b += bright; }
+      if (contrast !== 0) {
+        r = cf * (r - 128) + 128;
+        gg = cf * (gg - 128) + 128;
+        b = cf * (b - 128) + 128;
+      }
+      d[i] = Math.max(0, Math.min(255, r));
+      d[i + 1] = Math.max(0, Math.min(255, gg));
+      d[i + 2] = Math.max(0, Math.min(255, b));
+    }
+
+    if (nCol > 0) {
+      var pal = medianCut(d, nCol);
+      if (dither) {
+        // Floyd–Steinberg：把量化误差按 7/3/5/1 分给右、左下、下、右下
+        var buf = new Float32Array(d.length);
+        for (var q = 0; q < d.length; q++) buf[q] = d[q];
+        for (var y = 0; y < h; y++) {
+          for (var x = 0; x < w; x++) {
+            var o = (y * w + x) * 4;
+            if (buf[o + 3] < 8) continue;
+            var nr = buf[o], ng = buf[o + 1], nb = buf[o + 2];
+            var pick = nearest(pal, nr, ng, nb);
+            d[o] = pick[0]; d[o + 1] = pick[1]; d[o + 2] = pick[2];
+            var er = nr - pick[0], eg = ng - pick[1], eb = nb - pick[2];
+            spread(buf, w, h, x + 1, y, er, eg, eb, 7 / 16);
+            spread(buf, w, h, x - 1, y + 1, er, eg, eb, 3 / 16);
+            spread(buf, w, h, x, y + 1, er, eg, eb, 5 / 16);
+            spread(buf, w, h, x + 1, y + 1, er, eg, eb, 1 / 16);
+          }
+        }
+      } else {
+        for (var p = 0; p < d.length; p += 4) {
+          if (d[p + 3] < 8) continue;
+          var pc = nearest(pal, d[p], d[p + 1], d[p + 2]);
+          d[p] = pc[0]; d[p + 1] = pc[1]; d[p + 2] = pc[2];
+        }
+      }
+    }
+
+    g.putImageData(img, 0, 0);
+    small = c;
+
+    var cv = el('cv');
+    cv.width = w * zoom;
+    cv.height = h * zoom;
+    var og = cv.getContext('2d');
+    og.imageSmoothingEnabled = false;   // 放大必须关插值，否则边缘糊
+    og.drawImage(c, 0, 0, cv.width, cv.height);
+
+    el('wrap').style.display = 'block';
+    el('drop').style.display = 'none';
+    el('info').textContent = '原图 ' + srcImg.width + '×' + srcImg.height +
+      '  →  像素网格 ' + w + '×' + h + '（' + (nCol > 0 ? nCol + ' 色' : '原色') + '）';
+  }
+
+  function spread(buf, w, h, x, y, er, eg, eb, f) {
+    if (x < 0 || x >= w || y < 0 || y >= h) return;
+    var o = (y * w + x) * 4;
+    buf[o] += er * f; buf[o + 1] += eg * f; buf[o + 2] += eb * f;
+  }
+
+  function load(file) {
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function () {
+      srcImg = img;
+      URL.revokeObjectURL(url);
+      render();
+    };
+    img.src = url;
+  }
+
+  // 交互
+  ['scale', 'colors', 'dither', 'bright', 'contrast', 'sat', 'zoom'].forEach(function (id) {
+    var node = el(id);
+    node.addEventListener('input', render);
+    node.addEventListener('change', render);
+  });
+
+  el('pick').onclick = function () { el('file').click(); };
+  el('file').onchange = function (e) { if (e.target.files[0]) load(e.target.files[0]); };
+
+  el('save').onclick = function () {
+    if (!small) return;
+    // 导出按 8 倍最近邻放大，贴到别处不会被浏览器二次插值糊掉
+    var k = 8;
+    var out = document.createElement('canvas');
+    out.width = small.width * k;
+    out.height = small.height * k;
+    var og = out.getContext('2d');
+    og.imageSmoothingEnabled = false;
+    og.drawImage(small, 0, 0, out.width, out.height);
+    var a = document.createElement('a');
+    a.download = 'pixel_' + small.width + 'x' + small.height + '.png';
+    a.href = out.toDataURL('image/png');
+    a.click();
+  };
+
+  el('reset').onclick = function () {
+    el('scale').value = 6; el('colors').value = 16;
+    el('dither').checked = true;
+    el('bright').value = 0; el('contrast').value = 0;
+    el('sat').value = 0; el('zoom').value = 4;
+    render();
+  };
+
+  // 拖拽
+  var main = document.querySelector('main');
+  ['dragenter', 'dragover'].forEach(function (t) {
+    main.addEventListener(t, function (e) {
+      e.preventDefault(); el('drop').classList.add('on');
+      if (el('wrap').style.display === 'block') el('drop').style.display = 'none';
+    });
+  });
+  ['dragleave', 'drop'].forEach(function (t) {
+    main.addEventListener(t, function (e) {
+      e.preventDefault(); el('drop').classList.remove('on');
+      if (el('wrap').style.display === 'none') el('drop').style.display = 'flex';
+    });
+  });
+  main.addEventListener('drop', function (e) {
+    var f = e.dataTransfer.files[0];
+    if (f && f.type.indexOf('image') === 0) load(f);
+  });
+
+  // 粘贴（Ctrl+V）—— 截图后直接粘，不用先存文件
+  window.addEventListener('paste', function (e) {
+    var items = (e.clipboardData || {}).items || [];
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') === 0) {
+        load(items[i].getAsFile());
+        break;
+      }
+    }
+  });
+})();
+</script>
+</body>
+</html>
