@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ComfyUI 出图系统 · 使用说明</title>
+<style>
+  :root{
+    --bg:#fbfaf8; --panel:#ffffff; --ink:#1c1c1a; --ink2:#5f5e5a; --ink3:#8a8880;
+    --line:#e4e2dc; --line2:#d0cec6; --accent:#0f6e56; --accent-bg:#e1f5ee;
+    --warn:#854f0b; --warn-bg:#faeeda; --danger:#a32d2d; --danger-bg:#fcebeb;
+    --code-bg:#f1efe8;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#161614; --panel:#1e1e1c; --ink:#eceae4; --ink2:#a8a59c; --ink3:#78766e;
+      --line:#302f2b; --line2:#403f39; --accent:#5dcaa5; --accent-bg:#123b30;
+      --warn:#ef9f27; --warn-bg:#3a2a10; --danger:#f09595; --danger-bg:#3d1a1a;
+      --code-bg:#26251f;
+    }
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"Segoe UI","Microsoft YaHei","PingFang SC",system-ui,sans-serif;
+    font-size:15px; line-height:1.75; -webkit-font-smoothing:antialiased;
+  }
+  code,pre,.mono{font-family:"Cascadia Mono",Consolas,"Courier New",monospace}
+  header{
+    padding:44px 40px 32px; border-bottom:1px solid var(--line);
+    background:var(--panel);
+  }
+  header h1{margin:0 0 8px; font-size:26px; font-weight:600; letter-spacing:-.3px}
+  header p{margin:0; color:var(--ink2); font-size:14px}
+  .meta{margin-top:16px; display:flex; gap:22px; flex-wrap:wrap; font-size:12.5px; color:var(--ink3)}
+  .meta b{color:var(--ink2); font-weight:500}
+
+  .layout{display:flex; max-width:1180px; margin:0 auto; align-items:flex-start}
+  nav{
+    position:sticky; top:0; width:216px; flex:0 0 216px; padding:28px 0 40px 40px;
+    max-height:100vh; overflow-y:auto;
+  }
+  nav .grp{font-size:11.5px; letter-spacing:.08em; color:var(--ink3);
+    text-transform:uppercase; margin:20px 0 6px; font-weight:500}
+  nav .grp:first-child{margin-top:0}
+  nav a{
+    display:block; padding:4px 0 4px 10px; color:var(--ink2); text-decoration:none;
+    font-size:13.5px; border-left:2px solid transparent; transition:all .12s;
+  }
+  nav a:hover{color:var(--accent); border-left-color:var(--accent)}
+  nav a.on{color:var(--accent); border-left-color:var(--accent); font-weight:500}
+
+  main{flex:1; min-width:0; padding:28px 40px 100px; max-width:820px}
+  section{margin-bottom:54px; scroll-margin-top:24px}
+  h2{
+    font-size:19px; font-weight:600; margin:0 0 6px; letter-spacing:-.2px;
+    padding-bottom:10px; border-bottom:1px solid var(--line);
+  }
+  h2 .num{color:var(--ink3); font-weight:400; margin-right:8px; font-size:15px}
+  h3{font-size:15px; font-weight:600; margin:26px 0 8px}
+  p{margin:10px 0; color:var(--ink)}
+  .lead{color:var(--ink2); font-size:14px; margin:12px 0 20px}
+
+  ul,ol{margin:10px 0; padding-left:22px}
+  li{margin:5px 0}
+  li::marker{color:var(--ink3)}
+
+  code{background:var(--code-bg); padding:1.5px 5px; border-radius:4px;
+    font-size:12.8px; color:var(--ink)}
+  pre{
+    background:var(--code-bg); padding:14px 16px; border-radius:8px;
+    overflow-x:auto; font-size:12.8px; line-height:1.7; margin:12px 0;
+    border:1px solid var(--line);
+  }
+  pre code{background:none; padding:0}
+
+  table{width:100%; border-collapse:collapse; margin:14px 0; font-size:13.5px}
+  th,td{text-align:left; padding:8px 12px; border-bottom:1px solid var(--line); vertical-align:top}
+  th{font-weight:500; color:var(--ink2); font-size:12.5px; background:var(--panel);
+     border-bottom:1px solid var(--line2); white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  td.k{white-space:nowrap; color:var(--ink)}
+
+  .note{
+    background:var(--accent-bg); border-left:3px solid var(--accent);
+    padding:12px 16px; border-radius:0 8px 8px 0; margin:16px 0; font-size:13.5px;
+  }
+  .warn{
+    background:var(--warn-bg); border-left:3px solid var(--warn);
+    padding:12px 16px; border-radius:0 8px 8px 0; margin:16px 0; font-size:13.5px;
+  }
+  .note b,.warn b{font-weight:600}
+  .muted{color:var(--ink3); font-size:13px}
+
+  .cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin:16px 0}
+  .card{
+    border:1px solid var(--line); border-radius:10px; padding:14px 16px;
+    background:var(--panel);
+  }
+  .card h4{margin:0 0 6px; font-size:14px; font-weight:600}
+  .card p{margin:0; font-size:13px; color:var(--ink2); line-height:1.6}
+  .card .cmd{display:block; margin-top:8px; font-size:12px; color:var(--accent)}
+
+  .search{margin-top:18px; width:100%; max-width:340px}
+  .search input{
+    width:100%; padding:8px 12px; border:1px solid var(--line2); border-radius:8px;
+    background:var(--bg); color:var(--ink); font-size:13.5px; font-family:inherit;
+  }
+  .search input:focus{outline:none; border-color:var(--accent)}
+  .hit{background:#ffe58a; color:#1c1c1a; border-radius:2px}
+  @media (prefers-color-scheme: dark){ .hit{background:#6b5a1e; color:#f5f2e8} }
+
+  footer{border-top:1px solid var(--line); padding:24px 40px; color:var(--ink3);
+    font-size:12.5px; text-align:center}
+
+  @media (max-width:860px){
+    .layout{display:block}
+    nav{position:static; width:auto; max-height:none; padding:20px 20px 0; border-bottom:1px solid var(--line)}
+    nav a{display:inline-block; border-left:none; border-bottom:2px solid transparent; padding:4px 8px}
+    nav a:hover,nav a.on{border-left:none; border-bottom-color:var(--accent)}
+    nav .grp{margin:14px 0 4px}
+    header{padding:28px 20px 20px}
+    main{padding:20px 20px 80px}
+    header h1{font-size:21px}
+  }
+  @media print{
+    nav,.search{display:none}
+    body{background:#fff; color:#000}
+    .layout{display:block}
+    main{max-width:none; padding:0}
+    section{page-break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ComfyUI 出图系统 · 使用说明</h1>
+  <p>本机 SDXL / SD1.5 二次元出图环境：8 个工作流、6 个画风档、一条命令出图。</p>
+  <div class="meta">
+    <span><b>ComfyUI</b> D:\ComfyUI\ComfyUI_windows_portable</span>
+    <span><b>项目</b> D:\AI-Video-Setup</span>
+    <span><b>端口</b> 8188</span>
+    <span><b>整理日期</b> 2026-11-19</span>
+  </div>
+  <div class="search"><input id="q" placeholder="搜索关键词…（表名、文件名、报错）"></div>
+</header>
+
+<div class="layout">
+<nav id="nav">
+  <div class="grp">开始</div>
+  <a href="#s1">1 这套东西是什么</a>
+  <a href="#s2">2 三个入口</a>
+  <a href="#s3">3 五分钟上手</a>
+  <div class="grp">日常使用</div>
+  <a href="#s4">4 开关面板</a>
+  <a href="#s5">5 画风档</a>
+  <a href="#s6">6 参考图与动作</a>
+  <div class="grp">环境档案</div>
+  <a href="#s7">7 工作流清单</a>
+  <a href="#s8">8 模型清单</a>
+  <a href="#s9">9 脚本清单</a>
+  <a href="#s10">10 目录结构</a>
+  <div class="grp">排错</div>
+  <a href="#s11">11 故障速查</a>
+  <a href="#s12">12 已知边界</a>
+</nav>
+
+<main id="main">
+
+<section id="s1">
+  <h2><span class="num">01</span>这套东西是什么</h2>
+  <p class="lead">一个装在本机的二次元出图环境。ComfyUI 是引擎，上面叠了一层脚本，让你不用碰节点图也能出图。</p>
+
+  <p>分三层理解：</p>
+  <table>
+    <tr><th>层</th><th>是什么</th><th>你需要碰吗</th></tr>
+    <tr><td class="k">ComfyUI</td><td>节点式出图引擎，管模型加载、采样、超分</td><td>基本不用，只在改节点图时打开</td></tr>
+    <tr><td class="k">工作流</td><td>8 个预置的节点图（<code>workflows_hq/*.json</code>）</td><td>偶尔，想加节点时</td></tr>
+    <tr><td class="k">脚本层</td><td><code>make.py</code> 等，负责拼提示词、调参数、后处理</td><td>日常就用这一层</td></tr>
+  </table>
+
+  <div class="note">
+    <b>一句话：</b>日常双击 <code>出图开关.bat</code> 就能出图，不需要理解 ComfyUI 的节点。
+    节点图只在你想改结构（加一个 ControlNet、换采样器）时才需要看一眼。
+  </div>
+</section>
+
+<section id="s2">
+  <h2><span class="num">02</span>三个入口</h2>
+  <p class="lead">按省事程度从高到低。</p>
+
+  <div class="cards">
+    <div class="card">
+      <h4>出图开关（推荐）</h4>
+      <p>双击桌面 <code>出图开关.bat</code>。11 项开关，输编号翻转，按 r 出图。</p>
+      <span class="cmd">switch.py</span>
+    </div>
+    <div class="card">
+      <h4>一条命令</h4>
+      <p>不想看面板，直接用命令跑完整链路：生成 → 超分 → 换背景。</p>
+      <span class="cmd">python make.py</span>
+    </div>
+    <div class="card">
+      <h4>ComfyUI 界面</h4>
+      <p>要看节点、改结构时才用。浏览器开 <code>127.0.0.1:8188</code>，拖入工作流 json。</p>
+      <span class="cmd">1_启动ComfyUI.bat</span>
+    </div>
+  </div>
+
+  <h3>启动器一览</h3>
+  <table>
+    <tr><th>文件</th><th>用途</th></tr>
+    <tr><td class="k">1_启动ComfyUI.bat</td><td>启动引擎（正常显存）</td></tr>
+    <tr><td class="k">2_启动ComfyUI_省显存.bat</td><td>显存吃紧时用，慢但不容易爆</td></tr>
+    <tr><td class="k">4_启动_高画质模式.bat</td><td>高画质档专用启动</td></tr>
+    <tr><td class="k">8_出图开关.bat / 桌面 出图开关.bat</td><td>开关面板</td></tr>
+    <tr><td class="k">9_找参考图.bat / 桌面 找参考图.bat</td><td>按关键词扒参考图</td></tr>
+    <tr><td class="k">6_一键精灵图.bat</td><td>出 16 帧精灵图</td></tr>
+    <tr><td class="k">5_画风切换.bat</td><td>命令行版画风切换</td></tr>
+    <tr><td class="k">3_打包精灵图.bat</td><td>把帧打包成图集</td></tr>
+    <tr><td class="k">7_准备训练集.bat</td><td>整理 LoRA 训练素材</td></tr>
+  </table>
+
+  <div class="warn">
+    <b>所有 .bat 都是 GBK + CRLF + 不带 chcp。</b> 改这些文件时必须保持这个编码，
+    否则 cmd 会把中文命令拆错位，报出 <code>'xxx' is not recognized</code> 这类莫名错误。
+    UTF-8 加 <code>chcp 65001</code> 试过，会解析错行。
+  </div>
+</section>
+
+<section id="s3">
+  <h2><span class="num">03</span>五分钟上手</h2>
+  <p class="lead">从零到一张图。</p>
+
+  <ol>
+    <li>双击 <code>出图开关.bat</code>。第一次会自动拉起 ComfyUI，等就绪（最多 180 秒）。</li>
+    <li>看面板上的 11 项，按编号翻转。常用的是 <b>2 角色锁</b>（锁住人物长相）和 <b>3 超分</b>（放大到 3072×5376）。</li>
+    <li>按 <code>r</code> 出图。等 40～70 秒，完成后自动打开输出目录。</li>
+  </ol>
+
+  <p>产物在 <code>output\make\&lt;时间戳&gt;\</code>：</p>
+  <table>
+    <tr><th>文件</th><th>内容</th></tr>
+    <tr><td class="k">01_shot.png</td><td>原图（768×1344 或你选的尺寸）</td></tr>
+    <tr><td class="k">02_upscaled.png</td><td>4 倍超分（开了超分才有）</td></tr>
+    <tr><td class="k">03_scene.png</td><td>换背景后的合成图（开了换场景才有）</td></tr>
+  </table>
+
+  <h3>命令行等价写法</h3>
+  <pre><code>python make.py                          用 toggles.json 直接跑
+python make.py -P jump                  指定跳跃骨架
+python make.py -P off                   关骨架，随机姿势
+python make.py --scene cherry --upscale 临时开场景和超分
+python make.py --kao "(╥﹏╥)"            用颜文字指定表情
+python make.py -p "white hair, blue eyes"  追加提示词
+python make.py ... --save               把这次参数写回 toggles.json</code></pre>
+</section>
+
+<section id="s4">
+  <h2><span class="num">04</span>开关面板</h2>
+  <p class="lead">11 项，翻完自动存盘。按 <code>r</code> 出图，<code>q</code> 退出。</p>
+
+  <table>
+    <tr><th>键</th><th>项目</th><th>说明</th></tr>
+    <tr><td class="k">1</td><td>骨架</td><td><code>off</code> 不用 ControlNet，从 12 句姿势池随机抽一句塞提示词；<code>auto</code> 随机抽一个骨架预设；也可固定 <code>reach_up / jump / stand / sit</code></td></tr>
+    <tr><td class="k">2</td><td>角色锁</td><td>开 = 用 IP-Adapter 拿 <code>refs/char</code> 里的图锁长相</td></tr>
+    <tr><td class="k">3</td><td>4x 超分</td><td>出图后再放大，约 +20 秒，结果是 3072×5376</td></tr>
+    <tr><td class="k">4</td><td>换场景</td><td>关 / 樱花庭院 / 废教堂 / 霓虹夜街。会把人物抠出来贴到新背景，带去色溢和接触阴影</td></tr>
+    <tr><td class="k">5</td><td>底模</td><td>3dcg / soft / vivid / clear 四档，见下一节</td></tr>
+    <tr><td class="k">6</td><td>尺寸</td><td>768×1344 / 832×1216 / 512×896 / 768×1216</td></tr>
+    <tr><td class="k">7</td><td>追加提示词</td><td>接在默认主体描述后面，不覆盖</td></tr>
+    <tr><td class="k">8</td><td>动作包</td><td>用 <code>refs/*_web/_pack.json</code> 里的骨架，覆盖第 1 项</td></tr>
+    <tr><td class="k">9</td><td>中文解析</td><td>开 = 查询里的中文自动翻成 tag（词典映射，见第 6 节）</td></tr>
+    <tr><td class="k">k</td><td>颜文字</td><td>写一个颜文字，展开成表情 tag 插在提示词最前面。<code>?</code> 看支持哪些</td></tr>
+    <tr><td class="k">c</td><td>换参考图</td><td>从 <code>refs/char</code> 的 50 张里挑一张当角色锁参考</td></tr>
+  </table>
+
+  <p class="muted">所有开关存在 <code>toggles.json</code>，面板每次退出自动写盘。也可以直接改这个文件。</p>
+</section>
+
+<section id="s5">
+  <h2><span class="num">05</span>画风档</h2>
+  <p class="lead">六个档，本质是「底模 + 采样参数」的组合，不额外占硬盘。</p>
+
+  <table>
+    <tr><th>档名</th><th>底模</th><th>步数 / CFG</th><th>默认尺寸</th><th>适合</th></tr>
+    <tr>
+      <td class="k">3dcg</td><td>nova3dcg_v40</td><td>28 / 5.0</td><td>832×1216</td>
+      <td>手办质感、塑料高光。默认档</td>
+    </tr>
+    <tr>
+      <td class="k">soft</td><td>waiIllustrious_v170</td><td>32 / 4.5</td><td>832×1088</td>
+      <td>柔光半厚涂，皮肤通透</td>
+    </tr>
+    <tr>
+      <td class="k">vivid</td><td>Illustrious-XL-v2.0</td><td>36 / 6.0</td><td>832×1216</td>
+      <td>鲜艳赛璐璐，颜色饱和</td>
+    </tr>
+    <tr>
+      <td class="k">clear</td><td>hassakuXLIllustrious_v22</td><td>30 / 4.5</td><td>832×1088</td>
+      <td>清透亮，线条干净</td>
+    </tr>
+    <tr>
+      <td class="k">sprite</td><td>MeinaV7-pruned</td><td>12 / 2.0</td><td>512×512</td>
+      <td>精灵图（SD1.5 + LCM LoRA 0.6），出 16 帧</td>
+    </tr>
+    <tr>
+      <td class="k">anim</td><td>waiIllustrious_v170</td><td>28 / 5.0</td><td>768×768</td>
+      <td>动画工作流专用</td>
+    </tr>
+  </table>
+
+  <div class="warn">
+    <b>精灵图必须 ≥16 帧。</b> AnimateDiff v3_sd15_mm 在 16 帧以下会出噪点或霓虹条纹，
+    而且不报错——你只会看到一张崩掉的图。<code>style_lib.build()</code> 里已做硬保护自动抬到 16。
+  </div>
+
+  <h3>切换方式</h3>
+  <pre><code>面板按 5 循环切换
+python style_lib.py use soft        命令行切换
+python style_lib.py show soft       看某档完整参数
+python style_lib.py list            列出所有档
+python style_lib.py check           检查档里引用的模型文件是否都在</code></pre>
+</section>
+
+<section id="s6">
+  <h2><span class="num">06</span>参考图与动作</h2>
+  <p class="lead">四条通道各管一件事，别指望一条通道全包。</p>
+
+  <table>
+    <tr><th>通道</th><th>技术</th><th>管什么</th><th>不管什么</th></tr>
+    <tr><td class="k">角色</td><td>IP-Adapter（linear，0.80）</td><td>长相、发色、配色</td><td>姿势</td></tr>
+    <tr><td class="k">服装</td><td>IP-Adapter（linear，0.45）</td><td>款式、颜色分布</td><td>具体版型</td></tr>
+    <tr><td class="k">质感</td><td>IP-Adapter（style transfer，0.30）</td><td>笔触、光影风格</td><td>构图</td></tr>
+    <tr><td class="k">动作</td><td>ControlNet openpose（1.0 / 用到 0.75 步）</td><td>身体姿势、朝向</td><td>长相</td></tr>
+  </table>
+
+  <div class="note">
+    <b>为什么姿势只能靠 ControlNet：</b> IP-Adapter 学的是「这张图长什么样」，
+    权重拉到 0.9 也只是让画面更接近参考图的构图，没法指定「左腿抬 30 度」。
+    姿势是空间约束，只有骨架管得了。
+  </div>
+
+  <h3>多图同时喂</h3>
+  <pre><code>python multi_ref.py --char A.jpg --outfit B.jpg --style C.jpg --pose pose_jump.png
+python multi_ref.py --pack refs/pose_web      从参考图包里自动分通道
+python multi_ref.py --char A.jpg --compare    跑 A/B/C/D 四组递进对照</code></pre>
+
+  <h3>自己扒参考图</h3>
+  <pre><code>python ref_search.py --preset pose -q "jumping" -n 6 --allow-q
+python ref_search.py -q "少女在樱花树下奔跑" --preset pose   中文直搜
+python ref_search.py --list-presets                          看五类筛选规则</code></pre>
+
+  <table>
+    <tr><th>预设</th><th>方向</th><th>宽高比</th><th>强制</th></tr>
+    <tr><td class="k">char</td><td>竖</td><td>0.55 – 1.70</td><td>—</td></tr>
+    <tr><td class="k">outfit</td><td>竖</td><td>0.42 – 0.80</td><td>solo</td></tr>
+    <tr><td class="k">pose</td><td>竖</td><td>0.38 – 0.80</td><td>solo</td></tr>
+    <tr><td class="k">style</td><td>不限</td><td>0.45 – 2.00</td><td>—</td></tr>
+    <tr><td class="k">scene</td><td>横</td><td>1.10 – 2.40</td><td>no_humans</td></tr>
+  </table>
+
+  <div class="warn">
+    <b>扒图默认只留 s 级。</b> safebooru.org 虽是「safe」站，但 98% 的图被标成 q 级（擦边）。
+    想要更多候选加 <code>--allow-q</code>——动作和画风类放宽是划算的，服装类不建议。
+  </div>
+
+  <h3>中文与颜文字</h3>
+  <pre><code>python ref_search.py -q "雨夜霓虹街道" --preset scene   中文自动转 tag
+python kaomoji.py --tags "(╥﹏╥)"                     颜文字查表
+python make.py --kao "(≧▽≦)"                         用颜文字控制表情</code></pre>
+  <p class="muted">
+    中文解析是 174 条词典做最长匹配，纯离线，不是语言模型。颜文字表 42 个，也是查表不做训练。
+    两者都只认表里有的词，不中会明确提示并忽略。
+  </p>
+</section>
+
+<section id="s7">
+  <h2><span class="num">07</span>工作流清单</h2>
+  <p class="lead">8 个 JSON，在 ComfyUI 里拖进去就能用。日常由脚本调用，不需要手动打开。</p>
+
+  <table>
+    <tr><th>文件</th><th>节点</th><th>用途</th></tr>
+    <tr><td class="k">03_SDXL高质量立绘_超分</td><td>13</td><td>SDXL 立绘 + 4 倍超分。最常用的那条</td></tr>
+    <tr><td class="k">04_SDXL高质量动画</td><td>10</td><td>SDXL + AnimateDiff，出多帧</td></tr>
+    <tr><td class="k">05_FLUX极致单帧</td><td>10</td><td>FLUX 单帧，画质取向，速度慢</td></tr>
+    <tr><td class="k">06_柔光半厚涂_画风对齐</td><td>9</td><td>柔光半厚涂风格，对齐 <code>soft</code> 档</td></tr>
+    <tr><td class="k">07_3DCG手办质感</td><td>8</td><td>3DCG 手办质感，NOVA 底模（diffusers 格式，用 DiffusersLoader）</td></tr>
+    <tr><td class="k">08_3DCG_喂图锁角色</td><td>12</td><td>上面那条 + IP-Adapter 锁角色</td></tr>
+    <tr><td class="k">01_文生二次元动画</td><td>10</td><td>SD1.5 文生动画（旧，精灵图用）</td></tr>
+    <tr><td class="k">02_图生二次元动画</td><td>11</td><td>SD1.5 图生动画（旧）</td></tr>
+  </table>
+
+  <h3>体检</h3>
+  <pre><code>python check_workflows.py     检查 8 个 json 的连线、必填项、模型文件是否存在</code></pre>
+  <p class="muted">
+    改过工作流之后跑一次。历史上出过 <code>Required input is missing: vae</code> 这个错，
+    原因是同一个 link id 被 VAEEncode 和 VAEDecode 复用了，肉眼看不出来，只有体检能抓。
+  </p>
+</section>
+
+<section id="s8">
+  <h2><span class="num">08</span>模型清单</h2>
+  <p class="lead">都在 <code>D:\ComfyUI\ComfyUI_windows_portable\ComfyUI\models\</code> 下。</p>
+
+  <h3>底模 · checkpoints（23 GB）</h3>
+  <table>
+    <tr><th>文件</th><th>用途</th></tr>
+    <tr><td class="k">waiIllustriousSDXL_v170</td><td>soft / anim 档，柔光厚涂</td></tr>
+    <tr><td class="k">Illustrious-XL-v2.0</td><td>vivid 档，鲜艳赛璐璐</td></tr>
+    <tr><td class="k">hassakuXLIllustrious_v22</td><td>clear 档，清透亮</td></tr>
+    <tr><td class="k">MeinaV7-pruned</td><td>sprite 档（SD1.5），配 LCM 快出</td></tr>
+    <tr><td class="k">diffusers/nova3dcg_v40</td><td>3dcg 档，手办质感。<b>diffusers 格式，必须用 DiffusersLoader</b></td></tr>
+  </table>
+
+  <h3>其他</h3>
+  <table>
+    <tr><th>目录</th><th>文件</th><th>用途</th></tr>
+    <tr><td class="k">controlnet</td><td>controlnet_openpose_sdxl / controlnet_scribble_sdxl</td><td>骨架约束 / 线稿约束</td></tr>
+    <tr><td class="k">ipadapter</td><td>ip-adapter_sdxl / ip-adapter_sdxl_vit-h</td><td>视觉参考注入</td></tr>
+    <tr><td class="k">clip_vision</td><td>clip_vision_h</td><td>IP-Adapter 配套的视觉编码器</td></tr>
+    <tr><td class="k">vae</td><td>sdxl_vae / ae / anything-v5-vae</td><td>SDXL 用 sdxl_vae，FLUX 用 ae</td></tr>
+    <tr><td class="k">upscale_models</td><td>4x_NMKD-Superscale-SP_178000_G</td><td>4 倍超分</td></tr>
+    <tr><td class="k">animatediff_models</td><td>v3_sd15_mm / mm_sdxl_v10_beta</td><td>动画运动模块</td></tr>
+    <tr><td class="k">loras</td><td>lcm-lora-sdv1-5</td><td>sprite 档加速（0.6 强度）</td></tr>
+  </table>
+
+  <div class="warn">
+    <b>NOVA 3DCG 是 diffusers 目录格式，不是单个 safetensors。</b>
+    用 <code>CheckpointLoaderSimple</code> 加载会失败，必须用 <code>DiffusersLoader</code>。
+    07/08 两个工作流已经按这个配好了。
+  </div>
+</section>
+
+<section id="s9">
+  <h2><span class="num">09</span>脚本清单</h2>
+  <p class="lead">40 个 .py，日常只用前 8 个。其余看过即可。</p>
+
+  <h3>常用</h3>
+  <table>
+    <tr><th>脚本</th><th>做什么</th></tr>
+    <tr><td class="k">make.py</td><td>一条命令跑完整链路：骨架 → 生成 → 超分 → 换场景</td></tr>
+    <tr><td class="k">switch.py</td><td>开关面板</td></tr>
+    <tr><td class="k">ref_search.py</td><td>按 tag 扒参考图，带中文解析和骨架提取</td></tr>
+    <tr><td class="k">multi_ref.py</td><td>多图参考，四条通道各管一件事</td></tr>
+    <tr><td class="k">skeleton_gen.py</td><td>造骨架 / 手部线稿。姿势不对时用它手捏</td></tr>
+    <tr><td class="k">matte_composite.py</td><td>抠人 + 合成新背景，带去色溢和接触阴影</td></tr>
+    <tr><td class="k">nl2tags.py</td><td>中文描述转图站 tag（174 条词典）</td></tr>
+    <tr><td class="k">kaomoji.py</td><td>颜文字转表情 tag（42 条映射）</td></tr>
+  </table>
+
+  <h3>工具 / 实验</h3>
+  <table>
+    <tr><th>脚本</th><th>做什么</th></tr>
+    <tr><td class="k">style_lib.py</td><td>画风档引擎，其他脚本都调它。也可单独用</td></tr>
+    <tr><td class="k">prep_refs.py</td><td>把素材图处理成 49 张训练集（抠图 + 按脸裁方形）</td></tr>
+    <tr><td class="k">extract_pose.py</td><td>从图片提 OpenPose 18 点骨架</td></tr>
+    <tr><td class="k">person_mask.py</td><td>u2net / isnet 抠图，输出软 alpha</td></tr>
+    <tr><td class="k">staged_prompt.py</td><td>分步生成：粗图 → 细化 → 眼周 → 超分 → 调色</td></tr>
+    <tr><td class="k">texture_pipeline.py</td><td>质感增强（高光 / 对比 / USM）</td></tr>
+    <tr><td class="k">layer_paint.py</td><td>分层绘制实验（眼周层效果有限，未采用）</td></tr>
+    <tr><td class="k">eye_detail.py</td><td>眼部结构合成（眼白 / 虹膜 / 瞳孔 / 高光）</td></tr>
+    <tr><td class="k">check_workflows.py</td><td>工作流体检</td></tr>
+    <tr><td class="k">export_ui.py</td><td>API 格式工作流转回 UI 格式</td></tr>
+    <tr><td class="k">fullbody.py / struct_paint.py / painter_pipeline.py</td><td>早期实验，效果未达预期</td></tr>
+    <tr><td class="k">eye_fix.py</td><td>眼部重绘实验——<b>别用</b>，五种参数都出睁眼</td></tr>
+  </table>
+</section>
+
+<section id="s10">
+  <h2><span class="num">10</span>目录结构</h2>
+<pre><code>D:\ComfyUI\ComfyUI_windows_portable\
+  ComfyUI\                 引擎本体
+    models\                所有模型
+    input\                 待处理的图（LoadImage 只认这里）
+    output\                引擎原始输出
+  python_embeded\          内置 Python（装了 cv2 / requests / onnxruntime）
+
+D:\AI-Video-Setup\          项目目录
+  make.py  switch.py …     脚本
+  workflows\  workflows_hq\  8 个工作流
+  profiles\                画风档 json
+  refs\char\               50 张角色参考（49 训练集 + 1 自然底图）
+  refs\*_web\              网上扒的参考图 + _pack.json
+  output\make\<时间戳>\     出图产物
+  models\                  u2net.onnx / isnetis.onnx（抠图用）
+  toggles.json             所有开关
+  高质量模式说明.txt         技术日志（7 万字，排查过程都在里面）</code></pre>
+
+  <div class="note">
+    <b>refs/char 是核心资产，别往里混网图。</b> 那 50 张是训练集和角色锁的基准。
+    网上扒的图会存到 <code>refs/&lt;类别&gt;_web/</code>，两边分开。
+  </div>
+</section>
+
+<section id="s11">
+  <h2><span class="num">11</span>故障速查</h2>
+  <p class="lead">按症状找。每条都是实际踩过的。</p>
+
+  <table>
+    <tr><th>症状</th><th>原因</th><th>处理</th></tr>
+    <tr>
+      <td class="k">出图崩了 / 噪点 / 霓虹条纹</td>
+      <td>帧数低于 16（AnimateDiff）</td>
+      <td>已自动抬到 16 帧，若仍出现检查 <code>style_lib.build()</code></td>
+    </tr>
+    <tr>
+      <td class="k">报 Required input is missing: vae</td>
+      <td>工作流里 link id 被复用，或 inputs 用了旧 list 格式</td>
+      <td>跑 <code>check_workflows.py</code>，或 <code>export_ui.py</code> 重新转换</td>
+    </tr>
+    <tr>
+      <td class="k">每次出图都一样</td>
+      <td>seed 或提示词写死在档里</td>
+      <td>加 <code>--random</code>，或面板不设 seed</td>
+    </tr>
+    <tr>
+      <td class="k">出裸图 / 衣服不全</td>
+      <td>提示词只写了上衣，没写裙、袜、鞋</td>
+      <td>服装必须逐部位写清楚，光写 "white sailor uniform" 不够</td>
+    </tr>
+    <tr>
+      <td class="k">喂了参考图但角色不像</td>
+      <td>参考图不是正方形，CLIP 中心裁切把脸裁掉了</td>
+      <td><code>multi_ref</code> 会自动 <code>square_crop</code>；手动时先裁正方</td>
+    </tr>
+    <tr>
+      <td class="k">骨架不跟 / 姿势不对</td>
+      <td>提示词和骨架互相打架（最常见，<b>不是强度问题</b>）</td>
+      <td>先查 <code>standing</code>、<code>looking at viewer</code>、<code>plain wall background</code> 这几个词</td>
+    </tr>
+    <tr>
+      <td class="k">合成后一圈贴纸描边</td>
+      <td>IP-Adapter 收手太晚</td>
+      <td><code>ipa_end</code> 从 0.65 降到 0.45</td>
+    </tr>
+    <tr>
+      <td class="k">合成后有深色轮廓</td>
+      <td>源图投影残留（RGB 1,0,1 / alpha 254）</td>
+      <td>用拓扑法去投影，别按亮度阈值删（会吃掉线稿）</td>
+    </tr>
+    <tr>
+      <td class="k">边缘留绿边</td>
+      <td>色度距离 0.071 高于阈值 0.040</td>
+      <td>提到 0.085</td>
+    </tr>
+    <tr>
+      <td class="k">抠图抠出矩形</td>
+      <td>u2net 对二次元不灵</td>
+      <td>换 <code>isnetis.onnx</code>（<code>model="isnet-anime"</code>）</td>
+    </tr>
+    <tr>
+      <td class="k">抠图变成整屏 mask</td>
+      <td>改动了 <code>person_mask.alpha()</code> 里的 min-max 归一化或等比缩放</td>
+      <td>那两行不能动，恢复原样</td>
+    </tr>
+    <tr>
+      <td class="k">举手贴顶被裁</td>
+      <td>骨架贴画幅边缘，模型画得更长就出框</td>
+      <td>骨架 <code>--zoom 0.86</code> 留边，或加大画布</td>
+    </tr>
+    <tr>
+      <td class="k">.bat 报 'xxx' is not recognized</td>
+      <td>文件编码不是 GBK+CRLF</td>
+      <td>重新用 GBK + CRLF 写，不要加 <code>chcp 65001</code></td>
+    </tr>
+    <tr>
+      <td class="k">读不到图 / cv2 报错</td>
+      <td>路径含中文</td>
+      <td><code>cv2.imread</code> 读不了中文名，用 <code>np.fromfile + imdecode</code></td>
+    </tr>
+    <tr>
+      <td class="k">中文查询搜不到图</td>
+      <td>图站只认英文 tag</td>
+      <td>面板第 9 项打开，或手写英文</td>
+    </tr>
+    <tr>
+      <td class="k">扒图一个 tag 写错就 0 条</td>
+      <td>图站是 AND 逻辑，无效词会让整条查询归零</td>
+      <td>已做两级容错（单查 + 贪心累加），若仍空就换词</td>
+    </tr>
+    <tr>
+      <td class="k">等很久没反应</td>
+      <td>ComfyUI 没启动</td>
+      <td><code>make.py</code> 会自动拉起并等 180 秒；仍不行手动双击启动 bat</td>
+    </tr>
+  </table>
+</section>
+
+<section id="s12">
+  <h2><span class="num">12</span>已知边界</h2>
+  <p class="lead">这些不是没调好，是当前条件下做不到。省得反复试。</p>
+
+  <table>
+    <tr><th>想做的事</th><th>为什么不行</th></tr>
+    <tr>
+      <td class="k">6 GB 显存训 SDXL LoRA</td>
+      <td>SDXL LoRA 至少要 12 GB。6 GB 只能训 SD1.5 或 Textual Inversion</td>
+    </tr>
+    <tr>
+      <td class="k">让模型重新打光（relight）</td>
+      <td>本地没有这个能力。人物是平光、场景是斜射光时，只能靠调色近似</td>
+    </tr>
+    <tr>
+      <td class="k">颜文字当图形约束</td>
+      <td>模型把括号当耳机、弧线当机械面罩——它没有「颜文字=表情」的先验。只能走查表路线</td>
+    </tr>
+    <tr>
+      <td class="k">精确控制魔法特效的形状</td>
+      <td>特效形状不可控，要做只能素材合成</td>
+    </tr>
+    <tr>
+      <td class="k">喂图让画风越练越像</td>
+      <td>IP-Adapter 只在这一次生效，不会累积。要累积必须训 LoRA</td>
+    </tr>
+    <tr>
+      <td class="k">半睁眼 / 眼部精细结构</td>
+      <td>眼周像素太少（latent 只有 5.6×2.6），重绘改不动，只能算法增强</td>
+    </tr>
+    <tr>
+      <td class="k">国内直连扒优质图</td>
+      <td>danbooru / konachan / yande 全部超时，safebooru.com 被 Cloudflare 拦，只剩 safebooru.org 且质量参差</td>
+    </tr>
+  </table>
+</section>
+
+</main>
+</div>
+
+<footer>
+  ComfyUI 出图系统 · 使用说明 · 2026-11-19 · 详细排查过程见 高质量模式说明.txt
+</footer>
+
+<script>
+(function(){
+  var links = Array.prototype.slice.call(document.querySelectorAll('nav a'));
+  var secs  = links.map(function(a){ return document.querySelector(a.getAttribute('href')); });
+
+  function mark(){
+    var y = window.scrollY + 120, idx = 0;
+    for (var i=0;i<secs.length;i++){ if (secs[i] && secs[i].offsetTop <= y) idx = i; }
+    links.forEach(function(a,i){ a.classList.toggle('on', i===idx); });
+  }
+  window.addEventListener('scroll', mark, {passive:true});
+  mark();
+
+  var input = document.getElementById('q');
+  var main  = document.getElementById('main');
+  var orig  = main.innerHTML;
+  var timer = null;
+
+  input.addEventListener('input', function(){
+    clearTimeout(timer);
+    timer = setTimeout(function(){
+      var v = input.value.trim();
+      if (!v){ main.innerHTML = orig; rebind(); return; }
+      var re = new RegExp(v.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi');
+      var count = 0;
+      function walk(node){
+        if (node.nodeType === 3){
+          var t = node.nodeValue;
+          if (!re.test(t)) return;
+          re.lastIndex = 0;
+          var frag = document.createDocumentFragment(), last = 0, m;
+          while ((m = re.exec(t)) !== null){
+            frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+            var s = document.createElement('mark'); s.className='hit'; s.textContent=m[0];
+            frag.appendChild(s); last = m.index + m[0].length; count++;
+          }
+          frag.appendChild(document.createTextNode(t.slice(last)));
+          node.parentNode.replaceChild(frag, node);
+        } else if (node.nodeType === 1 && !/^(SCRIPT|MARK)$/.test(node.tagName)){
+          Array.prototype.slice.call(node.childNodes).forEach(walk);
+        }
+      }
+      main.innerHTML = orig;
+      walk(main);
+      var tip = document.createElement('div');
+      tip.className = 'muted';
+      tip.style.cssText = 'margin:0 0 16px;font-size:13px';
+      tip.textContent = count ? ('找到 ' + count + ' 处「' + v + '」，清空搜索框恢复全文') : ('没找到「' + v + '」');
+      main.insertBefore(tip, main.firstChild);
+      links.forEach(function(a){ a.classList.remove('on'); });
+    }, 180);
+  });
+
+  function rebind(){ mark(); }
+})();
+</script>
+</body>
+</html>

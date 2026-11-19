@@ -28,6 +28,21 @@ matting, compositing) and document the failure modes. No image assets included.
 - **不是模型也不是框架。** 没有训练代码、没有权重、没有推理服务。
 - **不含任何图片素材。** `refs/` 和 `output/` 都不入库，理由见文末。
 
+## 为什么是本地小模型
+
+大模型研究的方向是「能力越来越强，你调 API 就行」。本地小模型是另一条路：
+**6 GB 显存跑不动大模型，但能跑得很精细。**
+
+每一个环节都握在手里——底模、LoRA、ControlNet、抠图、合成、调色，能改、能复现、能离线。
+它不跟大模型抢「通用能力」，而是给它打辅助：
+
+- 大模型出一张好图 → 本地管线负责把它变成**能用的资产**：抠干净、换背景、拆图层、出多角度
+- 大模型做不稳的 → 本地做：特定角色的长相一致、固定画风、批量后处理
+- 网络不通 / API 贵 / 素材敏感 → 本地是唯一选择
+
+这也是为什么这个仓库里全是「钳工活」：软 alpha、去色溢、拓扑去投影、接触阴影、骨架提取。
+这些不性感，但它们是「把生成结果变成产品」必须经过的那一段。
+
 ## 核心思路：两段式，边界在文件
 
 这套东西最关键的设计不是某个参数，而是**分层**：
@@ -88,6 +103,7 @@ matting, compositing) and document the failure modes. No image assets included.
 
 ```
 ├── make.py / switch.py / ref_search.py …   40 个脚本
+├── paths.py            BASE / COMFY 的解析，换机器只改这里（或设 COMFY_PATH）
 ├── workflows/          01-02  SD1.5 动画（旧）
 ├── workflows_hq/       03-08  SDXL / 3DCG / FLUX
 ├── profiles/           6 个画风档 json
@@ -100,16 +116,23 @@ matting, compositing) and document the failure modes. No image assets included.
 
 三步：
 
-1. **改路径**——每个脚本头部有两行常量：
-   ```python
-   BASE = r"D:\AI-Video-Setup"
-   COMFY = r"D:\ComfyUI\ComfyUI_windows_portable\ComfyUI"
+1. **告诉脚本 ComfyUI 在哪**——`paths.py` 会按顺序找：环境变量 `COMFY_PATH`
+   → 仓库同级目录 → 常见落点（`D:\ComfyUI\...`、`~/ComfyUI`、`/opt/ComfyUI`）。
+   放得不是地方就设一个变量：
+   ```bat
+   set COMFY_PATH=E:\ComfyUI\ComfyUI_windows_portable\ComfyUI
    ```
+   仓库自己放哪都行，`BASE` 是按脚本位置算的，不用改。
 2. **下模型**——按 `hq-downloads.txt` / `model-downloads.txt` 里的文件名放进 `models/` 对应目录
 3. **准备素材**——`refs/char/` 放你的角色参考图（`prep_refs.py` 会自动抠图并按脸裁方形）
 
 > `.bat` 文件必须是 **GBK + CRLF + 不带 `chcp`**。改成 UTF-8 会让 cmd 把中文命令
 > 拆错位，报 `'xxx' is not recognized`。这个坑踩过不止一次。
+
+> 早期几个一次性验证脚本（`test_*.py`、`diagnose_soft.py`）里还留着作者当年的
+> 绝对路径和文件名，那些是调试快照，不保证开箱即用——核心链路
+> （`make.py` / `switch.py` / `ref_search.py` / `multi_ref.py` / `extract_pose.py`）
+> 都走 `paths.py`，换机器只要设 `COMFY_PATH`。
 
 ## Roadmap
 

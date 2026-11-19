@@ -1,0 +1,14 @@
+https://hf-mirror.com/OnomaAIResearch/Illustrious-XL-v2.0/resolve/main/Illustrious-XL-v2.0.safetensors
+  out=Illustrious-XL-v2.0.safetensors
+https://hf-mirror.com/guoyww/animatediff/resolve/main/mm_sdxl_v10_beta.ckpt
+  out=mm_sdxl_v10_beta.ckpt
+https://hf-mirror.com/city96/FLUX.1-dev-gguf/resolve/main/flux1-dev-Q4_K_S.gguf
+  out=flux1-dev-Q4_K_S.gguf  # 已弃用：ComfyUI 0.45 下会输出纯噪声
+https://hf-mirror.com/Comfy-Org/flux1-dev/resolve/main/flux1-dev-fp8.safetensors
+  out=flux1-dev-fp8.safetensors
+https://hf-mirror.com/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors
+  out=clip_l.safetensors
+https://hf-mirror.com/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors
+  out=t5xxl_fp8_e4m3fn.safetensors
+https://hf-mirror.com/black-forest-labs/FLUX.1-dev/resolve/main/ae.safetensors
+  out=ae.safetensors

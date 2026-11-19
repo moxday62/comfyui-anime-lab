@@ -1,0 +1,6 @@
+https://hf-mirror.com/fmoraes2k/t5xxl_fp8_e4m3fn.safetensors/resolve/main/t5xxl_fp8_e4m3fn.safetensors
+  out=t5xxl_fp8_e4m3fn.safetensors
+https://hf-mirror.com/DanielMarius/clip_l.safetensors/resolve/main/clip_l.safetensors
+  out=clip_l.safetensors
+https://hf-mirror.com/Osrivers/ae.safetensors/resolve/main/ae.safetensors
+  out=ae.safetensors

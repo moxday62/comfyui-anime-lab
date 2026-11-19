@@ -1,0 +1,43 @@
+{
+  "name": "soft",
+  "label": "柔光半厚涂",
+  "note": "低饱和暖灰、柔光漫射、软边缘、半厚涂。已验证。关键：采样器必须 euler，er_sde 会变粗线稿；不要走 Hires.fix 二段重采样。",
+  "loader": "checkpoint",
+  "model": "waiIllustriousSDXL_v170.safetensors",
+  "vae": "sdxl_vae.safetensors",
+  "positive": "masterpiece, best quality, ultra-detailed, 1girl, solo, silver hair, red eyes, heart-shaped beauty mark under eye, red and white japanese outfit, black choker, frills, peace sign, smiling, upper body, soft painterly illustration, muted warm grey palette, cream skin, soft diffuse lighting, gentle gradient shading, clean finished illustration",
+  "negative": "sketch, rough, pencil lines, lineart, unfinished, worst quality, low quality, blurry, bad anatomy, extra limbs, bad hands, missing fingers, extra fingers, oversaturated, neon, high contrast, harsh lighting, 3d, realistic, text, watermark",
+  "size": [
+    832,
+    1088
+  ],
+  "steps": 32,
+  "cfg": 4.5,
+  "sampler": "euler",
+  "scheduler": "normal",
+  "seed": 20261119,
+  "loras": [],
+  "ipadapter": {
+    "enabled": true,
+    "weight": 0.6,
+    "file": "ip-adapter_sdxl_vit-h.safetensors",
+    "clip_vision": "clip_vision_h.safetensors",
+    "ref": ""
+  },
+  "upscale": {
+    "enabled": false,
+    "model": "4x_NMKD-Superscale-SP_178000_G.pth"
+  },
+  "hand_fix": {
+    "enabled": false,
+    "box": [
+      0.05,
+      0.44,
+      0.26,
+      0.29
+    ],
+    "denoise": 0.55,
+    "prompt": "1girl, hand doing peace sign, two fingers extended, five fingers, natural hand, correct anatomy, clean fingers, cream skin, soft diffuse lighting, soft painterly illustration, masterpiece, best quality"
+  },
+  "output": "styles/soft"
+}

@@ -1,0 +1,39 @@
+{
+  "name": "sprite",
+  "label": "快速精灵图（视频）",
+  "note": "SD1.5 + LCM 蒸馏，16 帧约 41 秒。帧数不能低于 16（AnimateDiff 没有时序上下文就崩：1 帧纯噪点、8 帧霓虹条纹）。LCM 强度降到 0.6、12 步、CFG 2.0 才不会出扫掠伪影。输出逐帧 PNG。",
+  "loader": "checkpoint",
+  "model": "MeinaV7-pruned.safetensors",
+  "vae": "anything-v5-vae.safetensors",
+  "positive": "masterpiece, best quality, 1girl, solo, silver hair, red eyes, red and white outfit, full body, standing, plain solid green background, soft lighting, clean lines",
+  "negative": "worst quality, low quality, blurry, bad anatomy, extra limbs, bad hands, missing fingers, watermark, text, signature, background clutter",
+  "size": [512, 512],
+  "steps": 12,
+  "cfg": 2.0,
+  "sampler": "euler",
+  "scheduler": "normal",
+  "seed": 20261118,
+  "loras": [
+    {
+      "file": "lcm-lora-sdv1-5.safetensors",
+      "strength_model": 0.6,
+      "strength_clip": 0.6
+    }
+  ],
+  "animatediff": {
+    "model": "v3_sd15_mm.ckpt",
+    "frames": 16,
+    "beta_schedule": "autoselect"
+  },
+  "ipadapter": {
+    "enabled": false
+  },
+  "upscale": {
+    "enabled": false,
+    "model": "4x_NMKD-Superscale-SP_178000_G.pth"
+  },
+  "hand_fix": {
+    "enabled": false
+  },
+  "output": "styles/sprite"
+}

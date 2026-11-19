@@ -1,0 +1,35 @@
+{
+  "name": "vivid",
+  "label": "鲜艳赛璐璐",
+  "note": "高饱和、硬边赛璐璐、锐利线条，游戏立绘/官方画风取向。用中性底模 Illustrious 的出厂设定，不压风格。",
+  "loader": "checkpoint",
+  "model": "Illustrious-XL-v2.0.safetensors",
+  "vae": "sdxl_vae.safetensors",
+  "positive": "masterpiece, best quality, amazing quality, very aesthetic, absurdres, 1girl, solo, silver hair, long hair, red eyes, heart-shaped beauty mark under eye, red and white outfit, black choker, frills, peace sign, smiling, upper body, vibrant colors, saturated, cel shading, clean sharp lineart, crisp highlights, official art, game character portrait",
+  "negative": "worst quality, low quality, blurry, jpeg artifacts, deformed, bad anatomy, extra limbs, bad hands, missing fingers, mutted colors, desaturated, painterly, soft focus, haze, 3d, realistic, watermark, text, signature",
+  "size": [832, 1216],
+  "steps": 36,
+  "cfg": 6.0,
+  "sampler": "euler_ancestral",
+  "scheduler": "normal",
+  "seed": 20261119,
+  "loras": [],
+  "ipadapter": {
+    "enabled": true,
+    "weight": 0.6,
+    "file": "ip-adapter_sdxl_vit-h.safetensors",
+    "clip_vision": "clip_vision_h.safetensors",
+    "ref": ""
+  },
+  "upscale": {
+    "enabled": false,
+    "model": "4x_NMKD-Superscale-SP_178000_G.pth"
+  },
+  "hand_fix": {
+    "enabled": false,
+    "box": [0.05, 0.44, 0.26, 0.29],
+    "denoise": 0.55,
+    "prompt": "1girl, hand doing peace sign, five fingers, natural hand, correct anatomy, clean fingers, vibrant colors, cel shading, sharp lineart, best quality"
+  },
+  "output": "styles/vivid"
+}

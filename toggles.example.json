@@ -1,0 +1,14 @@
+{
+  "profile": "3dcg",
+  "size": "768x1344",
+  "pose": "off",
+  "char": true,
+  "upscale": true,
+  "scene": "",
+  "seed": null,
+  "prompt_extra": "",
+  "ref": "",
+  "pack": [],
+  "nl_tags": true,
+  "kaomoji": ""
+}
