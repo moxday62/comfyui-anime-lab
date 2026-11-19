@@ -1,0 +1,16 @@
+# .bat 是 GBK + CRLF，必须原样存储。
+# 打上 -text 就是让 git 别碰它 —— 一旦被转成 UTF-8 或 LF，
+# cmd 会把中文命令拆错位，报 "'xxx' is not recognized"。
+*.bat -text
+
+*.sh    text eol=lf
+*.py    text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+*.txt   text eol=lf
+*.html  text eol=lf
+*.sbatch text eol=lf
+
+# 图片永远当二进制（虽然仓库里本来就不放图）
+*.png binary
+*.jpg binary

@@ -1,0 +1,57 @@
+# ── 模型权重（几十 GB，自己下，文件名见 *-downloads.txt）
+*.safetensors
+*.ckpt
+*.pth
+*.onnx
+*.bin
+hq_models/
+style_models/
+models/
+controlnet_models/
+lora/
+diffusion_models/
+vae/
+clip_vision/
+
+# ── 图片素材与生成产物
+# 这一条是硬的：仓库不放任何图片。
+# refs/ 里有别人画的图，output/ 里有生成结果，都不入库。
+refs/
+output/
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+*.bmp
+
+# ── 第三方代码副本 / 安装包
+ComfyUI-AnimateDiff-Evolved-main/
+ComfyUI-GGUF-main/
+rtmlib_src/
+aria2-1.37.0-win-64bit-build1/
+*.zip
+*.7z
+*.tar
+*.gz
+
+# ── 缓存 / 日志
+__pycache__/
+*.pyc
+*.log
+*.bak
+*.bak.*
+
+# ── 本地状态（换机器就该重新生成，不该提交）
+toggles.json
+profiles/_current.txt
+flux.json
+
+# 实验残留
+profiles/tuning/
+
+# 临时工作文件
+_backup_paths/
+_fix_paths.py
+_push_one.py
+_upload.py

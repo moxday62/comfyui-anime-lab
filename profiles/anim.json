@@ -1,0 +1,33 @@
+{
+  "name": "anim",
+  "label": "高质量动画",
+  "note": "WAI 底座 + SDXL AnimateDiff，16 帧约 5 分钟。画质远高于 SD1.5 路线，但慢。帧数不能低于 16（1 帧纯噪点、8 帧霓虹条纹）。输出逐帧 PNG，再用打包脚本合成 sprite/GIF/MP4。",
+  "loader": "checkpoint",
+  "model": "waiIllustriousSDXL_v170.safetensors",
+  "vae": "sdxl_vae.safetensors",
+  "positive": "masterpiece, best quality, 1girl, solo, silver hair, red eyes, red and white outfit, full body, running, dynamic pose, plain solid green background, soft painterly illustration, muted warm grey palette, soft diffuse lighting",
+  "negative": "worst quality, low quality, blurry, bad anatomy, extra limbs, bad hands, missing fingers, watermark, text, signature, background clutter, oversaturated",
+  "size": [768, 768],
+  "steps": 28,
+  "cfg": 5.0,
+  "sampler": "euler",
+  "scheduler": "normal",
+  "seed": 42,
+  "loras": [],
+  "animatediff": {
+    "model": "mm_sdxl_v10_beta.ckpt",
+    "frames": 16,
+    "beta_schedule": "autoselect"
+  },
+  "ipadapter": {
+    "enabled": false
+  },
+  "upscale": {
+    "enabled": false,
+    "model": "4x_NMKD-Superscale-SP_178000_G.pth"
+  },
+  "hand_fix": {
+    "enabled": false
+  },
+  "output": "styles/anim"
+}

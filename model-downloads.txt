@@ -1,0 +1,8 @@
+https://hf-mirror.com/Linaqruf/anything-v3.0/resolve/main/anything-v3-fp16-pruned.safetensors
+  out=anything-v3-fp16-pruned.safetensors
+https://hf-mirror.com/stablediffusionapi/anything-v5/resolve/main/vae/diffusion_pytorch_model.safetensors
+  out=anything-v5-vae.safetensors
+https://hf-mirror.com/latent-consistency/lcm-lora-sdv1-5/resolve/main/pytorch_lora_weights.safetensors
+  out=lcm-lora-sdv1-5.safetensors
+https://hf-mirror.com/guoyww/animatediff/resolve/main/v3_sd15_mm.ckpt
+  out=v3_sd15_mm.ckpt

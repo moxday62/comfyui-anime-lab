@@ -1,0 +1,4 @@
+https://hf-mirror.com/madebyollin/sdxl-vae-fp16-fix/resolve/main/sdxl_vae.safetensors
+  out=sdxl_vae.safetensors
+https://hf-mirror.com/gemasai/4x_NMKD-Superscale-SP_178000_G/resolve/main/4x_NMKD-Superscale-SP_178000_G.pth
+  out=4x_NMKD-Superscale-SP_178000_G.pth

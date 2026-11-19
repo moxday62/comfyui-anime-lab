@@ -1,0 +1,86 @@
+{
+  "1": {
+    "class_type": "DiffusersLoader",
+    "inputs": {
+      "model_path": "nova3dcg_v40"
+    }
+  },
+  "2": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "1",
+        1
+      ],
+      "text": "1girl, solo, petite, slender, slim waist, pale skin, luminous skin, porcelain skin, soft matte skin, delicate skin, pink hair, short hair, blue eyes, half-closed eyes, sleepy expression, white sailor uniform, short sleeves, navy collar, blue bow, cropped top, white pleated skirt, white thighhighs, sitting on bed, dim room, soft warm lighting, indoor, masterpiece, best quality, amazing quality, very aesthetic, absurdres, subsurface scattering, 3d, cgi, octane render, cinematic lighting, soft global illumination, depth of field, highly detailed"
+    }
+  },
+  "3": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "1",
+        1
+      ],
+      "text": "bad quality, worst quality, worst detail, sketch, flat color, cel shading, monochrome, 2d, anime screencap, dark skin, tan skin, muscular, mature female, oversaturated, glossy plastic, shiny oily skin, doll joint, speech bubble, text bubble, speech balloon, comic bubble, watermark, logo, bad anatomy, bad hands, malformed hands, extra digits, fewer digits, missing fingers, blurry, lowres, signature, jpeg artifacts, text"
+    }
+  },
+  "4": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+      "width": 832,
+      "height": 1216,
+      "batch_size": 1
+    }
+  },
+  "5": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "seed": 20261130,
+      "steps": 28,
+      "cfg": 5.0,
+      "sampler_name": "euler_ancestral",
+      "scheduler": "normal",
+      "denoise": 1.0,
+      "positive": [
+        "2",
+        0
+      ],
+      "negative": [
+        "3",
+        0
+      ],
+      "latent_image": [
+        "4",
+        0
+      ]
+    }
+  },
+  "6": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "5",
+        0
+      ],
+      "vae": [
+        "1",
+        2
+      ]
+    }
+  },
+  "7": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "6",
+        0
+      ],
+      "filename_prefix": "styles/3dcg"
+    }
+  }
+}
